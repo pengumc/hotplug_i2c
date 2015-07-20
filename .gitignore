@@ -1,0 +1,15 @@
+pruts.txt
+*.o
+*.elf
+*.hex
+avr_master/bin
+avr_master/include/usbdrv
+avr_master/src/*.asm
+avr_master/src/*.inc
+avr_master/src/*.S
+avr_master/src/usbdrv.c
+avr_slave/bin
+pc/bin
+pc/include/hidapi
+
+
