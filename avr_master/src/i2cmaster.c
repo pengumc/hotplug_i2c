@@ -12,11 +12,13 @@ void init_i2cmaster(i2cmasterdata_t* data) {
   }
   // set type to 1
   data->type = 1;
+  // starting state
+  data->state = I2CSTATE_IDLE & I2C_MASK;
 }
 
 // call this regularly
 void doi2cstuff(i2cmasterdata_t* data) {
-  uint8_t status = TWSR & 0xF8 & data->state
+  uint8_t status = TWSR & 0xF8 & data->state;
   if (CHK(TWCR, TWINT)) {
     switch(status) {
       case I2CSTATE_DEVQUERY0a:
@@ -41,7 +43,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         goto i2c_en_ea;
       }
       case I2CSTATE_DEVQUERY4: {
-        TWDR = I2C_MASTER_CMD_QUERY
+        TWDR = I2C_MASTER_CMD_QUERY;
         data->state = I2CSTATE_DEVQUERY5 & I2C_MASK;
         goto i2c_en_ea;
       }
@@ -83,7 +85,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
       }
     }
   } else {  // NO TWINT
-    switch (dev->state) {
+    switch (data->state) {
       case I2CSTATE_IDLE & I2C_MASK: {
         TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTA) | (1<<TWINT);
         data->state = I2CSTATE_DEVQUERY0a & I2C_MASK;

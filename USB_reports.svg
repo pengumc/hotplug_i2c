@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="reports.svg">
+   sodipodi:docname="USB_reports.svg">
   <defs
      id="defs4">
     <marker
@@ -387,9 +387,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="969.58961"
-     inkscape:cy="467.47772"
+     inkscape:zoom="1.4"
+     inkscape:cx="886.60722"
+     inkscape:cy="738.25796"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1808,44 +1808,45 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:Sans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
-       x="1009.5"
-       y="172.36218"
+       x="1029.1973"
+       y="151.47937"
        id="text4857"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4859"
-         x="1009.5"
-         y="172.36218">0 = no cmd given</tspan><tspan
+         x="1029.1973"
+         y="151.47937">0 = no cmd given</tspan><tspan
          sodipodi:role="line"
-         x="1009.5"
-         y="187.36218"
-         id="tspan4861">1 = rejected last cmd</tspan><tspan
+         x="1029.1973"
+         y="166.47937"
+         id="tspan4861"
+         style="font-weight:normal">1 = rejected last cmd</tspan><tspan
          sodipodi:role="line"
-         x="1009.5"
-         y="202.36218"
+         x="1029.1973"
+         y="181.47937"
          id="tspan4863">2 = busy</tspan><tspan
          sodipodi:role="line"
-         x="1009.5"
-         y="217.36218"
+         x="1029.1973"
+         y="196.47937"
          id="tspan4867">3 = failed</tspan><tspan
          sodipodi:role="line"
-         x="1009.5"
-         y="232.36218"
+         x="1029.1973"
+         y="211.47937"
          id="tspan4906" /></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:Sans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
-       x="1209.0488"
-       y="171.47937"
+       x="1209.5488"
+       y="151.47937"
        id="text4857-9"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="1209.0488"
-         y="171.47937"
+         x="1209.5488"
+         y="151.47937"
          id="tspan4906-2">4 = data waiting</tspan><tspan
          sodipodi:role="line"
-         x="1209.0488"
-         y="186.47937"
+         x="1209.5488"
+         y="166.47937"
          id="tspan7340">5 = waiting for user data</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:1.41836023px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Mend-0)"
@@ -2265,5 +2266,51 @@
          x="348.63281"
          y="234.51843"
          id="tspan4317">data</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.57735026;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4851-1"
+       width="120"
+       height="20"
+       x="880"
+       y="182.36218" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       x="942.36621"
+       y="198.03796"
+       id="text4853-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4855-0"
+         x="942.36621"
+         y="198.03796">I2C state</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 1020,142.36218 -10,30 10,30"
+       id="path4692"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 1000,172.36218 10,0"
+       id="path4694"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.57735026;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4851-1-0"
+       width="120"
+       height="20"
+       x="880"
+       y="202.36218" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       x="942.36621"
+       y="218.03796"
+       id="text4853-5-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4855-0-6"
+         x="942.36621"
+         y="218.03796">count</tspan></text>
   </g>
 </svg>

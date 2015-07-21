@@ -3,6 +3,9 @@
 #ifndef I2CMASTER_H
 #define I2CMASTER_H
 
+#include <avr/io.h>
+
+#include "default.h"
 #include "i2cdef.h"
 
 
@@ -15,6 +18,7 @@ typedef struct {
 
 typedef struct {
   uint8_t state;  // bit 0..2 i2c state
+  uint8_t cur_cmd;
   uint8_t dev_n;
   uint8_t type;
   uint8_t temp_addr;
@@ -25,6 +29,7 @@ typedef struct {
   dev_t devices[I2C_MAX_DEVCOUNT];
 } i2cmasterdata_t;
 
-void  doi2cstuff(i2cmasterdata_t* data);
+void doi2cstuff(i2cmasterdata_t* data);
+void init_i2cmaster(i2cmasterdata_t* data);
 
 #endif  // I2CMASTER_H

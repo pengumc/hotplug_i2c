@@ -5,7 +5,7 @@ AVRDUDE_MCU = m88
 AVRDUDE_PROGRAMMERID = usbasp
 F_CPU = 20000000
 NAME = i2cdebug
-OBJECTS = usbdrv.o usbdrvasm.o $(NAME).o
+OBJECTS = usbdrv.o usbdrvasm.o i2cmaster.o $(NAME).o
 CFLAGS = -DF_CPU=$(F_CPU) -std=c99 -Wall -Os -mmcu=$(MMCU) -Iinclude -I.
 CC = avr-gcc
 SIZE = avr-size

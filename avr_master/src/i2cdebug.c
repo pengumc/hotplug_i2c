@@ -50,10 +50,21 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
         TWCR = recv[1];
       }
     } else {
-      new_cmd = recv[4];
-      new_cmd_data[0] = recv[5];
-      new_cmd_data[1] = recv[6];
-      new_cmd_data[2] = recv[7];
+      if (recv[4] == USB_I2C_QUERY_DEVS) {
+        if (cmd_state == CMD_STATE_IDLE) {
+          cmd_state = CMD_STATE_BUSY;
+          masterdata.state = I2CSTATE_IDLE & I2C_MASK;
+          masterdata.cur_cmd = USB_I2C_QUERY_DEVS;
+        }
+      } else if (recv[4] == USB_REQ_DATA) {
+        if (cmd_state == CMD_STATE_FAILED) {
+          reporting_count = pages_waiting;
+          setup_error_report();  
+        } else if (cmd_state == CMD_STATE_DATA_WAITING) {
+          reporting_count = pages_waiting;
+          setup_dev_query_report(0);
+        }
+      }
     }
     return 1;
   } else {
@@ -61,36 +72,69 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
   }
 }
 
-// ------------------------------------------------------------------toplevel_sm
-void toplevel_sm(i2cmasterdata_t* data) {
-  just step statemachine on usb int ready when in failed or data_available state
-  or don't pretend it's a proper statemachine
-  
-  always keep 'normal_data' up to date
-  update 'report_data'
-  call statemachine when usbInterruptIsReady
-  if free/busy set normal_data
-  if failed, use data->report_remaining
-  
-  
-  
-  usb data modes:
-    normal
-      cur_cmd = 0, new_cmd = 0, cmd_sta
-    report
-  
-  if (usbInterruptIsReady()){
-    
-    usbSetInterrupt(send, 8);
-  }
+// -----------------------------------------------------------setup_error_report
+void setup_error_report() {
+  uint8_t i = 0;
+  report_data[i++] = masterdata.cur_cmd;
+  report_data[i++] = 0;
+  report_data[i++] = masterdata.error;
+  report_data[i++] = 0;
+  report_data[i++] = 0;
+  report_data[i++] = 0;
+  report_data[i++] = 0;
+  report_data[i++] = 0;
+  usbSetInterrupt(report_data, 8);
 }
 
-/*
-  set failed stuff
-  ready data
-  - data not read yet
-*/
-
+// -------------------------------------------------------setup_dev_query_report
+void setup_dev_query_report(uint8_t index) {
+  if (cmd_state != CMD_STATE_DATA_WAITING) return;
+  uint8_t i = 0;
+  uint8_t j = index << 1;
+  report_data[i++] = USB_I2C_QUERY_DEVS;
+  report_data[i++] = index;
+  report_data[i++] = masterdata.devices[j].addr;
+  report_data[i++] = masterdata.devices[j].type;
+  report_data[i++] = masterdata.devices[j++].bufsize;
+  if (j >= masterdata.dev_n) {
+    report_data[i++] = 0;
+    report_data[i++] = 0;
+    report_data[i++] = 0;
+  } else {
+    report_data[i++] = masterdata.devices[j].addr;
+    report_data[i++] = masterdata.devices[j].type;
+    report_data[i++] = masterdata.devices[j].bufsize;
+  }
+  usbSetInterrupt(report_data, 8);
+}
+ 
+// -------------------------------------------------------------------ready_data 
+void ready_data() {
+  if (reporting_count == 0) {
+    // no special reports waiting
+    report_data[0] = TWSR;
+    report_data[1] = TWCR;
+    report_data[2] = TWDR;
+    report_data[3] = TWBR;
+    report_data[4] = TWAR;
+    report_data[5] = cmd_state;
+    report_data[6] = masterdata.state;
+    report_data[7] = pages_waiting;
+    usbSetInterrupt(report_data, 8);
+  } else {
+    if (usbInterruptIsReady()) {
+      // a report was sent
+      if (--reporting_count == 0) {
+        ready_data();
+        pages_waiting = 0;
+        cmd_state = CMD_STATE_IDLE;
+        return;
+      }
+    }
+    setup_dev_query_report(pages_waiting - reporting_count); 
+  }
+}
+ 
 // -------------------------------------------------------------------------main
 int main() {
   wdt_enable(WDTO_1S);
@@ -105,16 +149,33 @@ int main() {
   sei();
   
   new_cmd = 0;
-  i2cmasterdata_t masterdata;
+  cmd_state = 0;
+  reporting_count = 0;
+  pages_waiting = 0;
   init_i2cmaster(&masterdata);
   
   while(1) {
     wdt_reset();
     usbPoll();
-    doi2cstuff(&masterdata);
-    if (usbInterruptIsReady()) {
-      // determin what to send for the next tranfer
+    if (cmd_state == CMD_STATE_BUSY) {
+      doi2cstuff(&masterdata);
+      // 0 = idle
+      // 1 3 4 5 = busy
+      // 2 = done
+      if (masterdata.error) {
+        cmd_state = CMD_STATE_FAILED;
+        pages_waiting = 1;
+      } else if (masterdata.state == (I2CSTATE_DEVQUERY12 & I2C_MASK)) {
+        if (masterdata.dev_n >0) {
+          cmd_state =  CMD_STATE_DATA_WAITING;
+          pages_waiting = ++masterdata.dev_n >> 1;
+        } else {  // cmd finished, no data
+          pages_waiting = 0;
+          cmd_state = CMD_STATE_IDLE;
+        }
+      }
     }
+    ready_data();
   }
 }
 
