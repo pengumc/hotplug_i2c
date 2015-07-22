@@ -6,7 +6,7 @@
 void init_i2cmaster(i2cmasterdata_t* data) {
   // zero everything
   uint8_t i;
-  uint8_t* d = (uint8_t*)((void*)&data);
+  uint8_t* d = (uint8_t*)((void*)data);
   for(i = 0; i < sizeof(i2cmasterdata_t); ++i) {
     d[i] = 0;
   }
@@ -83,6 +83,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         data->state = I2CSTATE_DEVQUERY6 & I2C_MASK;
         goto i2c_en_ea;
       }
+      default: return;
     }
   } else {  // NO TWINT
     switch (data->state) {
