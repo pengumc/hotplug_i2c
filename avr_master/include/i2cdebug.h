@@ -26,7 +26,7 @@ usbMsgLen_t usbFunctionSetup(uchar data[8]);
 uchar usbFunctionWrite(uchar * data, uchar len);
 void setup_error_report();
 void setup_dev_query_report(uint8_t index);
-void ready_data();
+void ready_data(uint8_t a);
 
 // global vars:
 // -----------------------------------------------------------USB HID Descriptor
