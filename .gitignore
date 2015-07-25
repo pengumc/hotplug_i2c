@@ -2,6 +2,7 @@ pruts.txt
 *.o
 *.elf
 *.hex
+*.exe
 avr_master/bin
 avr_master/include/usbdrv
 avr_master/src/*.asm

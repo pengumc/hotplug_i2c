@@ -18,7 +18,7 @@ void init_i2cmaster(i2cmasterdata_t* data) {
 
 // call this regularly
 void doi2cstuff(i2cmasterdata_t* data) {
-  uint8_t status = TWSR & 0xF8 & data->state;
+  uint8_t status = (TWSR & 0xF8) | data->state;
   if (CHK(TWCR, TWINT)) {
     switch(status) {
       case I2CSTATE_DEVQUERY0a:
@@ -55,6 +55,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
       }
       case I2CSTATE_DEVQUERY7: {
         data->state = I2CSTATE_DEVQUERY8 & I2C_MASK;
+        data->counter = 0;
         goto i2c_en_ea;
       }
       case I2CSTATE_DEVQUERY8: {
@@ -81,6 +82,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
           data->dev_n = 0;
         }
         data->state = I2CSTATE_DEVQUERY6 & I2C_MASK;
+        data->counter = 0;
         goto i2c_en_ea;
       }
       default: return;
@@ -93,7 +95,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         return;
       }
       case I2CSTATE_DEVQUERY6 & I2C_MASK: {
-        if (++data->counter == 0) {
+        if (++data->counter) == 0) {
           data->state = I2CSTATE_DEVQUERY12 & I2C_MASK;
         }
         return;
@@ -105,6 +107,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         //data->cmd_state = TL_DATA_AVAILABLE;
         return;
       }
+      default: return;
     }
   }
   // labels 
@@ -117,6 +120,6 @@ void doi2cstuff(i2cmasterdata_t* data) {
   return;
   
   i2c_stop:
-  TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTO);
+  TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTO) | (1<<TWINT);
   return;
 }

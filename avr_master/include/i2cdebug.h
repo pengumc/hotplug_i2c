@@ -12,21 +12,21 @@
 #include "i2cmaster.h"
 #include "default.h"
 
-#define USB_REQ_DATA 2
-#define USB_I2C_QUERY_DEVS 1
+#define USB_I2C_QUERY_DEVS (1<<4)
 
 #define CMD_STATE_IDLE 0
-#define CMD_STATE_REJECTED 1
 #define CMD_STATE_BUSY 2
 #define CMD_STATE_FAILED 3
 #define CMD_STATE_DATA_WAITING 4
-#define CMD_STATE_USER_DATA 5
+
+#define REPORT_MODE_NORMAL 0
+#define REPORT_MODE_ERROR 1
+#define REPORT_MODE_DATA 2
+
 
 usbMsgLen_t usbFunctionSetup(uchar data[8]);
 uchar usbFunctionWrite(uchar * data, uchar len);
-void setup_error_report();
-void setup_dev_query_report(uint8_t index);
-void ready_data(uint8_t a);
+void setup_next_report(uint8_t page);
 
 // global vars:
 // -----------------------------------------------------------USB HID Descriptor
@@ -55,8 +55,7 @@ uint8_t recv[8];
 uint8_t report_data[8];
 i2cmasterdata_t masterdata;
 
-uint8_t new_cmd;
-uint8_t reporting_count;
+uint8_t report_mode;
 uint8_t cmd_state;
 uint8_t pages_waiting;
 

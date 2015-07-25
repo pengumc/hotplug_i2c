@@ -197,12 +197,22 @@ void update_twcr(hid_device* handle, uint8_t twcr) {
   usbwrite(handle, buf, sizeof(buf));
 }
 
-void testing(hid_device* handle) {
+// -------------------------------------------------------------------query_devs
+void query_devs(hid_device* handle) {
   uint8_t buf[9];
   memset(buf, 0, 9);
-  buf[6] = 10;
+  buf[1] = 1 << 4;
   usbwrite(handle, buf, sizeof(buf));
 }
+
+// --------------------------------------------------------------set_report_mode
+void set_report_mode(hid_device* handle, uint8_t mode) {
+  uint8_t buf[9];
+  memset(buf, 0, 9);
+  buf[6] = mode;
+  usbwrite(handle, buf, sizeof(buf));
+}
+
 
 // ---------------------------------------------------------------wait_for_twint
 void wait_for_twint(hid_device* handle, uint8_t* buf) {
@@ -336,10 +346,11 @@ void mastermode(int* argc, char** argv) {
         printf("5: set TWDR and send\n");
         printf("6: set TWINT, TWEN, TWEA\n");
         printf("7: send STOP\n");
-        printf("8: set TWCR pure\n");
+        printf("8: set TWCR pure (0x84 = int+ea\n");
         printf("9: list i2c devs\n");
         printf("10: set TWBR\n");
-        printf("11: testing\n");
+        printf("11: query devs\n");
+        printf("12: set report mode\n");
         gets(input);
         args_found = sscanf(input, "%i 0x%02hX", &i, &data);
         if (args_found > 0) {
@@ -394,7 +405,16 @@ void mastermode(int* argc, char** argv) {
               printf("need hex data\n");
             }
           } else if (i == 11) {
-            testing(handle);
+            query_devs(handle);
+            read = 10;
+          } else if (i == 12) {
+            if (args_found == 2) {
+              set_report_mode(handle, (uint8_t)data);
+              _delay1s();
+              read = 1;
+            } else {
+              printf("expected mode as well");
+            }
           }else {
             break;
           }

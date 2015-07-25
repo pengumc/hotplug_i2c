@@ -34,8 +34,8 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
   bytes_remaining -= len;
   
   if (bytes_remaining == 0) {
-    if (recv[5] == 0) {
-      // act on recv
+    if ((recv[0] & 0xF0) == 0) {
+      // act on first 4 bits of recv[0]
       if (CHK(recv[0], 1)) {
         if (CHK(TWCR, TWINT)) TWDR = recv[2];
       }
@@ -48,99 +48,92 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
       if (CHK(recv[0], 0)) {
         TWCR = recv[1];
       }
-      pages_waiting = 0;
     } else {
-      ++pages_waiting;
-      ready_data(15);
+      // set a new command (if possible)
+      if ((recv[0] & 0xF0) == USB_I2C_QUERY_DEVS) {
+        if (cmd_state == CMD_STATE_IDLE ||
+            cmd_state == CMD_STATE_DATA_WAITING) {
+          if (masterdata.state == (I2CSTATE_IDLE & I2C_MASK)) {
+            masterdata.state = I2CSTATE_IDLE & I2C_MASK;
+            masterdata.cur_cmd = USB_I2C_QUERY_DEVS;
+            cmd_state = CMD_STATE_BUSY;
+          }
+        }
+      }
     }
-    // } else {
-      // if (recv[5] == USB_I2C_QUERY_DEVS) {
-        // if (cmd_state == CMD_STATE_IDLE) {
-          // cmd_state = CMD_STATE_BUSY;
-          // masterdata.state = I2CSTATE_IDLE & I2C_MASK;
-          // masterdata.cur_cmd = USB_I2C_QUERY_DEVS;
-        // }
-      // } else if (recv[5] == USB_REQ_DATA) {
-        // if (cmd_state == CMD_STATE_FAILED) {
-          // reporting_count = pages_waiting;
-          // setup_error_report();  
-        // } else if (cmd_state == CMD_STATE_DATA_WAITING) {
-          // reporting_count = pages_waiting;
-          // setup_dev_query_report(0);
-        // }
-      // }
-    // }
+    // always accept report mode on byte 5
+    report_mode = recv[5];
+    
+
+    
+    
+    
+    // prepare for immediate report request
+    setup_next_report(recv[6]);
+    usbSetInterrupt(report_data, 8);
     return 1;
   } else {
     return 0; 
   }
 }
 
-// -----------------------------------------------------------setup_error_report
-void setup_error_report() {
-  uint8_t i = 0;
-  report_data[i++] = masterdata.cur_cmd;
-  report_data[i++] = 0;
-  report_data[i++] = masterdata.error;
-  report_data[i++] = 0;
-  report_data[i++] = 0;
-  report_data[i++] = 0;
-  report_data[i++] = 0;
-  report_data[i++] = 0;
-  usbSetInterrupt(report_data, 8);
-}
-
-// -------------------------------------------------------setup_dev_query_report
-void setup_dev_query_report(uint8_t index) {
-  if (cmd_state != CMD_STATE_DATA_WAITING) return;
-  uint8_t i = 0;
-  uint8_t j = index << 1;
-  report_data[i++] = USB_I2C_QUERY_DEVS;
-  report_data[i++] = index;
-  report_data[i++] = masterdata.devices[j].addr;
-  report_data[i++] = masterdata.devices[j].type;
-  report_data[i++] = masterdata.devices[j++].bufsize;
-  if (j >= masterdata.dev_n) {
-    report_data[i++] = 0;
-    report_data[i++] = 0;
-    report_data[i++] = 0;
-  } else {
-    report_data[i++] = masterdata.devices[j].addr;
-    report_data[i++] = masterdata.devices[j].type;
-    report_data[i++] = masterdata.devices[j].bufsize;
-  }
-  usbSetInterrupt(report_data, 8);
-}
- 
-// -------------------------------------------------------------------ready_data 
-void ready_data(uint8_t a) {
-  if (reporting_count == 0) {
-    if (usbInterruptIsReady()) {
-      // no special reports waiting
-      report_data[0] = TWSR;
-      report_data[1] = TWCR;
-      report_data[2] = TWDR;
-      report_data[3] = TWBR;
-      report_data[4] = TWAR;
-      report_data[5] = cmd_state;
-      report_data[6] = masterdata.state;
-      report_data[7] = a;
-      usbSetInterrupt(report_data, 8);
-    }
-  } else {
-    if (usbInterruptIsReady()) {
-      // a report was sent
-      if (--reporting_count == 0) {
-        ready_data(0);
-        pages_waiting = 0;
-        cmd_state = CMD_STATE_IDLE;
-        return;
+void setup_next_report(uint8_t page) {
+  register uint8_t i = 0;
+  switch(report_mode) {
+    case REPORT_MODE_DATA: {
+      report_data[i++] = masterdata.devices[0].addr;
+      report_data[i++] = masterdata.devices[1].addr;
+      report_data[i++] = masterdata.devices[2].addr;
+      report_data[i++] = masterdata.devices[3].addr;
+      report_data[i++] = masterdata.devices[4].addr;
+      report_data[i++] = masterdata.devices[5].addr;
+      report_data[i++] = masterdata.devices[6].addr;
+      report_data[i++] = masterdata.devices[7].addr;
+      break;
+      if (page < pages_waiting) {
+        uint8_t j = page << 1;
+        report_data[i++] = USB_I2C_QUERY_DEVS;
+        report_data[i++] = page;
+        report_data[i++] = masterdata.devices[j].addr;
+        report_data[i++] = masterdata.devices[j].type;
+        report_data[i++] = masterdata.devices[j++].bufsize;
+        if (j >= masterdata.dev_n) {
+          report_data[i++] = 0;
+          report_data[i++] = 0;
+          report_data[i++] = 0;
+        } else {
+          report_data[i++] = masterdata.devices[j].addr;
+          report_data[i++] = masterdata.devices[j].type;
+          report_data[i++] = masterdata.devices[j].bufsize;
+        }
+        break;
       }
     }
-    setup_dev_query_report(pages_waiting - reporting_count); 
+    default:
+    case REPORT_MODE_NORMAL: {
+      report_data[i++] = TWSR;
+      report_data[i++] = TWCR;
+      report_data[i++] = TWDR;
+      report_data[i++] = TWBR;
+      report_data[i++] = TWAR;
+      report_data[i++] = cmd_state;
+      report_data[i++] = masterdata.state;
+      report_data[i++] = pages_waiting;
+      break;
+    }
+    case REPORT_MODE_ERROR: {
+      report_data[i++] = masterdata.cur_cmd;
+      report_data[i++] = 0;
+      report_data[i++] = masterdata.error;
+      report_data[i++] = 0;
+      report_data[i++] = 0;
+      report_data[i++] = 0;
+      report_data[i++] = 0;
+      report_data[i++] = 0;
+      break;
+    }
   }
 }
- 
 
 // -------------------------------------------------------------------------main
 int main() {
@@ -153,9 +146,8 @@ int main() {
     _delay_ms(1);
   }
 
-  new_cmd = 0;
   cmd_state = 0;
-  reporting_count = 0;
+  report_mode = 0;
   pages_waiting = 0;
   init_i2cmaster(&masterdata);
 
@@ -175,16 +167,19 @@ int main() {
         cmd_state = CMD_STATE_FAILED;
         pages_waiting = 1;
       } else if (masterdata.state == (I2CSTATE_DEVQUERY12 & I2C_MASK)) {
-        if (masterdata.dev_n >0) {
+        // if (masterdata.dev_n >0) {
           cmd_state =  CMD_STATE_DATA_WAITING;
-          pages_waiting = ++masterdata.dev_n >> 1;
-        } else {  // cmd finished, no data
-          pages_waiting = 0;
-          cmd_state = CMD_STATE_IDLE;
-        }
+          pages_waiting = masterdata.dev_n;
+        // } else {  // cmd finished, no data
+          // pages_waiting = 0;
+          // cmd_state = CMD_STATE_IDLE;
+        // }
       }
     }
-    ready_data(0);
+    setup_next_report(recv[6]);
+    if (usbInterruptIsReady()) {
+      usbSetInterrupt(report_data, 8);
+    }
   }
 }
 
