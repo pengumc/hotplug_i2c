@@ -67,17 +67,17 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="253.10763"
-     inkscape:cy="-12.436236"
+     inkscape:cx="237.2999"
+     inkscape:cy="178.01618"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      showborder="false"
-     inkscape:window-width="1680"
-     inkscape:window-height="1027"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
+     inkscape:window-width="1167"
+     inkscape:window-height="764"
+     inkscape:window-x="52"
+     inkscape:window-y="52"
+     inkscape:window-maximized="0"
      inkscape:connector-spacing="30"
      inkscape:snap-grids="true"
      inkscape:snap-to-guides="false"
@@ -715,7 +715,7 @@
          y="1402.3622">transfer</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
        x="230.71429"
        y="1449.505"
        id="text10156"
@@ -723,7 +723,7 @@
          sodipodi:role="line"
          id="tspan10158"
          x="230.71429"
-         y="1449.505">1</tspan></text>
+         y="1449.505">via stop</tspan></text>
     <g
        id="g7754-4-7-5-3-7-7-7-0"
        transform="translate(-230.02637,763.64111)"
@@ -748,7 +748,7 @@
            y="568.72107"
            x="290.02637"
            id="tspan7752-5-0-8-8-0-4-5-0"
-           sodipodi:role="line">0x70:3</tspan></text>
+           sodipodi:role="line">0x70:1</tspan></text>
     </g>
     <rect
        style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.87082863;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -1082,7 +1082,7 @@
        inkscape:connection-end-point="d4" />
     <path
        style="display:inline;fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Mend)"
-       d="m -10.278588,781.29386 -82.147819,391.06834 59.97363,153.6411 64.394122,94.9751"
+       d="M 4.095711,782.19333 55.904289,1412.531"
        id="path3143"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0"
@@ -1137,15 +1137,15 @@
          y="972.36218">transfer</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       x="39.999996"
-       y="802.36218"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       x="87.359375"
+       y="808.74109"
        id="text10095-5-3"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan10097-4-4"
-         x="39.999996"
-         y="802.36218">transfer</tspan></text>
+         x="87.359375"
+         y="808.74109">transfer (nack)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
@@ -1380,7 +1380,7 @@
          y="1453.3622">DEVQUERY12</tspan></text>
     <path
        style="display:inline;fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Mstart)"
-       d="M -165.54587,1414.4973 -92.426407,1172.3622 60,672.36218 341.76258,595.51784"
+       d="M -152.81795,1420.3969 362.81795,624.32746"
        id="path4616"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0"

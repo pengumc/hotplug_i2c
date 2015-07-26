@@ -128,6 +128,7 @@ void write_dev(int* argc, char** argv) {
 // --------------------------------------------------------------------setup_i2c
 void setup_i2c(hid_device* handle) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   // set TWCR, TWBR and TWAR
   buf[1] = (1<<SET_TWCR) | (1<<SET_TWBR) | (1<<SET_TWAR);
   buf[2] = (1<<TWEN) | (1<<TWEA);
@@ -139,6 +140,7 @@ void setup_i2c(hid_device* handle) {
 // -------------------------------------------------------------------send_start
 void send_start(hid_device* handle) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWCR);
   buf[2] = (1<<TWINT) | (1<<TWSTA) | (1<<TWEA) | (1<<TWEN);
   usbwrite(handle, buf, sizeof(buf));
@@ -147,6 +149,7 @@ void send_start(hid_device* handle) {
 // --------------------------------------------------------------------send_stop
 void send_stop(hid_device* handle) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWCR);
   buf[2] = (1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWSTO);
   usbwrite(handle, buf, sizeof(buf));
@@ -155,6 +158,7 @@ void send_stop(hid_device* handle) {
 // ------------------------------------------------------------------update_twar
 void update_twar(hid_device* handle, uint8_t twar) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWAR);
   buf[5] = twar;
   usbwrite(handle, buf, sizeof(buf));
@@ -163,6 +167,7 @@ void update_twar(hid_device* handle, uint8_t twar) {
 // ------------------------------------------------------------------update_twbr
 void update_twbr(hid_device* handle, uint8_t twbr) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWBR);
   buf[4] = twbr;
   usbwrite(handle, buf, sizeof(buf));
@@ -171,6 +176,7 @@ void update_twbr(hid_device* handle, uint8_t twbr) {
 // --------------------------------------------------------------------send_twdr
 void send_twdr(hid_device* handle, uint8_t twdr) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWDR) | (1<<SET_TWCR);
   buf[2] = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
   buf[3] = twdr;
@@ -185,10 +191,28 @@ void send_data(hid_device* handle) {
 // ------------------------------------------------------------------update_twcr
 void update_twcr(hid_device* handle, uint8_t twcr) {
   uint8_t buf[9];
+  memset(buf, 0, 9);
   buf[1] = (1<<SET_TWCR);
   buf[2] = twcr;
   usbwrite(handle, buf, sizeof(buf));
 }
+
+// -------------------------------------------------------------------query_devs
+void query_devs(hid_device* handle) {
+  uint8_t buf[9];
+  memset(buf, 0, 9);
+  buf[1] = 1 << 4;
+  usbwrite(handle, buf, sizeof(buf));
+}
+
+// --------------------------------------------------------------set_report_mode
+void set_report_mode(hid_device* handle, uint8_t mode) {
+  uint8_t buf[9];
+  memset(buf, 0, 9);
+  buf[6] = mode;
+  usbwrite(handle, buf, sizeof(buf));
+}
+
 
 // ---------------------------------------------------------------wait_for_twint
 void wait_for_twint(hid_device* handle, uint8_t* buf) {
@@ -322,15 +346,17 @@ void mastermode(int* argc, char** argv) {
         printf("5: set TWDR and send\n");
         printf("6: set TWINT, TWEN, TWEA\n");
         printf("7: send STOP\n");
-        printf("8: set TWCR pure\n");
+        printf("8: set TWCR pure (0x84 = int+ea\n");
         printf("9: list i2c devs\n");
         printf("10: set TWBR\n");
+        printf("11: query devs\n");
+        printf("12: set report mode\n");
         gets(input);
         args_found = sscanf(input, "%i 0x%02hX", &i, &data);
         if (args_found > 0) {
           if (i == 1) {
             setup_i2c(handle);
-            read = 2;
+            read = 3;
           } else if (i== 2) {
             read = 1;
           } else if (i == 3) {
@@ -378,7 +404,18 @@ void mastermode(int* argc, char** argv) {
             } else {
               printf("need hex data\n");
             }
-          } else {
+          } else if (i == 11) {
+            query_devs(handle);
+            read = 10;
+          } else if (i == 12) {
+            if (args_found == 2) {
+              set_report_mode(handle, (uint8_t)data);
+              _delay1s();
+              read = 1;
+            } else {
+              printf("expected mode as well");
+            }
+          }else {
             break;
           }
         }
