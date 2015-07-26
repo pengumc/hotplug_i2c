@@ -165,7 +165,7 @@ ISR(TIMER1_COMPA_vect){
   } else if (show == 3) {
     set_pure(i2cdata.state);
   } else if (show == 4) {
-    set_pure(i2cdata.address);
+    set_pure(i2cdata.address | i2cdata.once);
     show = 0xFF;
   }
 }

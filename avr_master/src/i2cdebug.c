@@ -81,15 +81,6 @@ void setup_next_report(uint8_t page) {
   register uint8_t i = 0;
   switch(report_mode) {
     case REPORT_MODE_DATA: {
-      report_data[i++] = masterdata.devices[0].addr;
-      report_data[i++] = masterdata.devices[1].addr;
-      report_data[i++] = masterdata.devices[2].addr;
-      report_data[i++] = masterdata.devices[3].addr;
-      report_data[i++] = masterdata.devices[4].addr;
-      report_data[i++] = masterdata.devices[5].addr;
-      report_data[i++] = masterdata.devices[6].addr;
-      report_data[i++] = masterdata.devices[7].addr;
-      break;
       if (page < pages_waiting) {
         uint8_t j = page << 1;
         report_data[i++] = USB_I2C_QUERY_DEVS;
@@ -118,7 +109,7 @@ void setup_next_report(uint8_t page) {
       report_data[i++] = TWAR;
       report_data[i++] = cmd_state;
       report_data[i++] = masterdata.state;
-      report_data[i++] = pages_waiting;
+      report_data[i++] = masterdata.dev_n;
       break;
     }
     case REPORT_MODE_ERROR: {
@@ -158,7 +149,7 @@ int main() {
   while(1) {
     wdt_reset();
     usbPoll();
-    if (cmd_state == CMD_STATE_BUSY) {
+      if (cmd_state == CMD_STATE_BUSY) {
       doi2cstuff(&masterdata);
       // 0 = idle
       // 1 3 4 5 = busy
@@ -182,4 +173,3 @@ int main() {
     }
   }
 }
-

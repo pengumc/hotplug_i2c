@@ -82,6 +82,7 @@ typedef struct {
   uint8_t bufpos;
   uint8_t lastmode;
   uint8_t lastlen;
+  uint8_t once;
 } i2cdata_t;
 
 typedef struct {

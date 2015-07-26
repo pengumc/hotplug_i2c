@@ -18,8 +18,8 @@ void init_i2cmaster(i2cmasterdata_t* data) {
 
 // call this regularly
 void doi2cstuff(i2cmasterdata_t* data) {
-  uint8_t status = (TWSR & 0xF8) | data->state;
   if (CHK(TWCR, TWINT)) {
+    uint8_t status = (TWSR & 0xF8) | data->state;
     switch(status) {
       case I2CSTATE_DEVQUERY0a:
       case I2CSTATE_DEVQUERY0b: {
@@ -69,9 +69,10 @@ void doi2cstuff(i2cmasterdata_t* data) {
         goto i2c_en_ea;
       }
       case I2CSTATE_DEVQUERY10: {
-        data->temp_bufsize = TWDR;
-        data->state = I2CSTATE_DEVQUERY11 & I2C_MASK;
-        goto i2c_en;
+          data->temp_bufsize = TWDR;
+          data->counter = 0;
+          data->state = I2CSTATE_DEVQUERY11 & I2C_MASK;
+          goto i2c_en;
       }
       case I2CSTATE_DEVQUERY11: {
         data->devices[data->dev_n].addr = data->temp_addr;
@@ -85,7 +86,10 @@ void doi2cstuff(i2cmasterdata_t* data) {
         data->counter = 0;
         goto i2c_en_ea;
       }
-      default: return;
+      default: {
+        data->error = status;
+        return;
+      }
     }
   } else {  // NO TWINT
     switch (data->state) {
@@ -95,7 +99,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         return;
       }
       case I2CSTATE_DEVQUERY6 & I2C_MASK: {
-        if (++data->counter) == 0) {
+        if ((++data->counter) == 0) {
           data->state = I2CSTATE_DEVQUERY12 & I2C_MASK;
         }
         return;

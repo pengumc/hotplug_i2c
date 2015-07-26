@@ -7,6 +7,7 @@ void start_I2C(i2cdata_t* data, uint8_t addr) {
   data->bc_queued = 0;
   // data->lastmode = 0;
   data->devtype = I2C_DEV_7SEG;
+  data->once  = 0;
   uint8_t i;
   for (i=0; i<BUFSIZE; ++i) {
     data->buffer[i] = 0;
@@ -109,8 +110,10 @@ void doi2cstuff(i2cdata_t* data) {
         if (CHK(data->state, 7)) {
           // if transmitting, this was the last byte or things went wrong
           // in which case the master will handle things...
+          // for both instances, stop is the correct action
           TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTO) | (1<<TWINT);
           data->bc_queued = 0;
+          data->once = 0x80;
           data->state = I2CSTATE_IDLE;
           goto i2c_bad_exit;
         } else {
@@ -186,6 +189,7 @@ void doi2cstuff(i2cdata_t* data) {
             if ((data->recv_last == I2C_QUERY &&
                 data->recv_type < I2C_MASTER_TYPE_THRESHOLD) || 
                 data->bc_queued > 0) {
+                data->bc_queued = 1;
                 data->state = I2CSTATE_BC0;
             } else data->state = I2CSTATE_IDLE;
             goto i2c_en_ea;
