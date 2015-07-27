@@ -25,7 +25,7 @@ typedef struct {
   uint8_t temp_type;
   uint8_t temp_bufsize;
   uint16_t counter;
-  uint8_t error;
+  uint8_t error[3];
   dev_t devices[I2C_MAX_DEVCOUNT];
 } i2cmasterdata_t;
 

@@ -12,7 +12,7 @@
 #include "i2cmaster.h"
 #include "default.h"
 
-#define USB_I2C_QUERY_DEVS (1<<4)
+#define USB_I2C_QUERY_DEVS 1
 
 #define CMD_STATE_IDLE 0
 #define CMD_STATE_BUSY 2

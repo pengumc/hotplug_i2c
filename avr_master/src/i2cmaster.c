@@ -13,101 +13,138 @@ void init_i2cmaster(i2cmasterdata_t* data) {
   // set type to 1
   data->type = 1;
   // starting state
-  data->state = I2CSTATE_IDLE & I2C_MASK;
+  data->state = I2CSTATE_IDLE;
 }
 
 // call this regularly
 void doi2cstuff(i2cmasterdata_t* data) {
+  if (data->state == I2CSTATE_ERROR) return;
+  uint8_t status = TWSR & 0xF8;
   if (CHK(TWCR, TWINT)) {
-    uint8_t status = (TWSR & 0xF8) | data->state;
     switch(status) {
-      case I2CSTATE_DEVQUERY0a:
-      case I2CSTATE_DEVQUERY0b: {
-        TWDR = 0x00;
-        data->state = I2CSTATE_DEVQUERY1 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY1: {
-        TWDR = TWAR >> 1;
-        data->state = I2CSTATE_DEVQUERY2 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY2: {
-        TWDR = data->type;
-        data->state = I2CSTATE_DEVQUERY3 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY3: {
-        TWDR = I2C_MASTER_BUFSIZE;
-        data->state = I2CSTATE_DEVQUERY4 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY4: {
-        TWDR = I2C_MASTER_CMD_QUERY;
-        data->state = I2CSTATE_DEVQUERY5 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY5: {
-        data->state = I2CSTATE_DEVQUERY6 & I2C_MASK;
-        data->dev_n = 0;
-        data->counter = 0;
-        goto i2c_stop;
-      }
-      case I2CSTATE_DEVQUERY7: {
-        data->state = I2CSTATE_DEVQUERY8 & I2C_MASK;
-        data->counter = 0;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY8: {
-        data->temp_addr = TWDR;
-        data->state = I2CSTATE_DEVQUERY9 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY9: {
-        data->temp_type = TWDR;
-        data->state = I2CSTATE_DEVQUERY10 & I2C_MASK;
-        goto i2c_en_ea;
-      }
-      case I2CSTATE_DEVQUERY10: {
-          data->temp_bufsize = TWDR;
-          data->counter = 0;
-          data->state = I2CSTATE_DEVQUERY11 & I2C_MASK;
-          goto i2c_en;
-      }
-      case I2CSTATE_DEVQUERY11: {
-        data->devices[data->dev_n].addr = data->temp_addr;
-        data->devices[data->dev_n].type = data->temp_type;
-        data->devices[data->dev_n++].bufsize = data->temp_bufsize;
-        if (data->dev_n >= I2C_MAX_DEVCOUNT) {
-          data->error = I2C_ERR_DEVOVF;
-          data->dev_n = 0;
+      case AVRI2C_M_REP_START_SENT:
+      case AVRI2C_M_START_SENT: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY0: {
+            TWDR = 0x00;
+            data->state = I2CSTATE_DEVQUERY1;
+            goto i2c_en_ea;
+          } 
+          default: goto unhandled_state;
         }
-        data->state = I2CSTATE_DEVQUERY6 & I2C_MASK;
-        data->counter = 0;
-        goto i2c_en_ea;
       }
-      default: {
-        data->error = status;
-        return;
+      case AVRI2C_M_SLA_W_SENT_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY1: {
+            TWDR = TWAR >> 1;
+            data->state = I2CSTATE_DEVQUERY2;
+            goto i2c_en_ea;
+          }
+          default: goto unhandled_state;
+        }
       }
+      case AVRI2C_M_DATA_SENT_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY2: {
+            TWDR = data->type;
+            data->state = I2CSTATE_DEVQUERY3;
+            goto i2c_en_ea;
+          }
+          case I2CSTATE_DEVQUERY3: {
+            TWDR = I2C_MASTER_BUFSIZE;
+            data->state = I2CSTATE_DEVQUERY4;
+            goto i2c_en_ea;
+          }
+          case I2CSTATE_DEVQUERY4: {
+            TWDR = I2C_MASTER_CMD_QUERY;
+            data->state = I2CSTATE_DEVQUERY5;
+            goto i2c_en_ea;
+          }
+          default: goto unhandled_state;
+        }
+      }
+      case AVRI2C_M_DATA_SENT_AND_NACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY5: {
+            data->dev_n = 0;
+            data->counter = 0;
+            data->state = I2CSTATE_DEVQUERY6;
+            goto i2c_stop;
+          }
+          default: goto unhandled_state;
+        }
+      }
+      case AVRI2C_S_GC_RECEIVED_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY6: {
+            data->state = I2CSTATE_DEVQUERY8;
+            goto i2c_en_ea;
+          }
+          default: goto unhandled_state;
+        }
+      }
+      case AVRI2C_S_GC_DATA_RECEIVED_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY8: {
+            data->temp_addr = TWDR;
+            data->state = I2CSTATE_DEVQUERY9;
+            goto i2c_en_ea;
+          }
+          case I2CSTATE_DEVQUERY9: {
+            data->temp_type = TWDR;
+            data->state = I2CSTATE_DEVQUERY10;
+            goto i2c_en_ea;
+          }
+          case I2CSTATE_DEVQUERY10: {
+            data->temp_bufsize = TWDR;
+            data->counter = 0;
+            data->state = I2CSTATE_DEVQUERY11;
+            goto i2c_en;
+          }
+          default: goto unhandled_state;
+        }
+      }
+      case AVRI2C_S_GC_DATA_RECEIVED_AND_NACKED: {
+        switch(data->state) {
+          case I2CSTATE_DEVQUERY11: {
+            data->devices[data->dev_n].addr = data->temp_addr;
+            data->devices[data->dev_n].type = data->temp_type;
+            data->devices[data->dev_n++].bufsize = data->temp_bufsize;
+            if (data->dev_n >= I2C_MAX_DEVCOUNT) {
+              data->error[0] = I2C_ERR_DEVOVF;
+              data->error[1] = status;
+              data->error[2] = data->state;
+              data->dev_n = 0;
+            }
+            data->state = I2CSTATE_DEVQUERY6;
+            data->counter = 0;
+            goto i2c_en_ea;
+          }
+          default: goto unhandled_state;
+        }
+      }
+      default: goto unhandled_state;
+      
     }
   } else {  // NO TWINT
     switch (data->state) {
-      case I2CSTATE_IDLE & I2C_MASK: {
-        TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTA) | (1<<TWINT);
-        data->state = I2CSTATE_DEVQUERY0a & I2C_MASK;
-        return;
-      }
-      case I2CSTATE_DEVQUERY6 & I2C_MASK: {
-        if ((++data->counter) == 0) {
-          data->state = I2CSTATE_DEVQUERY12 & I2C_MASK;
+      case I2CSTATE_IDLE: {
+        if (data->cur_cmd) {
+          TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTA) | (1<<TWINT);
+          data->state = data->cur_cmd;
         }
         return;
       }
-      case I2CSTATE_DEVQUERY12 & I2C_MASK: {
+      case I2CSTATE_DEVQUERY6: {
+        if ((++data->counter) == 0) {
+          data->state = I2CSTATE_DEVQUERY12;
+        }
+        return;
+      }
+      case I2CSTATE_DEVQUERY12: {
         // data available
         // keep i2c separate from other systems
-        // data->state 2 indicates we're done anyway.
+        // data->state devquery12 indicates were done anyway
         //data->cmd_state = TL_DATA_AVAILABLE;
         return;
       }
@@ -125,5 +162,12 @@ void doi2cstuff(i2cmasterdata_t* data) {
   
   i2c_stop:
   TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTO) | (1<<TWINT);
+  return;
+  
+  unhandled_state:
+  data->error[0] = I2C_ERR_UNHANDLED_STATE;
+  data->error[1] = status;
+  data->error[2] = data->state;
+  data->state = I2CSTATE_ERROR;
   return;
 }

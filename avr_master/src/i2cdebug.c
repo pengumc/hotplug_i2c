@@ -50,11 +50,10 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
       }
     } else {
       // set a new command (if possible)
-      if ((recv[0] & 0xF0) == USB_I2C_QUERY_DEVS) {
+      if ((recv[0] & 0xF0) == (USB_I2C_QUERY_DEVS<<4)) {
         if (cmd_state == CMD_STATE_IDLE ||
             cmd_state == CMD_STATE_DATA_WAITING) {
-          if (masterdata.state == (I2CSTATE_IDLE & I2C_MASK)) {
-            masterdata.state = I2CSTATE_IDLE & I2C_MASK;
+          if (masterdata.state == I2CSTATE_IDLE) {
             masterdata.cur_cmd = USB_I2C_QUERY_DEVS;
             cmd_state = CMD_STATE_BUSY;
           }
@@ -115,9 +114,9 @@ void setup_next_report(uint8_t page) {
     case REPORT_MODE_ERROR: {
       report_data[i++] = masterdata.cur_cmd;
       report_data[i++] = 0;
-      report_data[i++] = masterdata.error;
-      report_data[i++] = 0;
-      report_data[i++] = 0;
+      report_data[i++] = masterdata.error[0];
+      report_data[i++] = masterdata.error[1];
+      report_data[i++] = masterdata.error[2];
       report_data[i++] = 0;
       report_data[i++] = 0;
       report_data[i++] = 0;
@@ -154,10 +153,10 @@ int main() {
       // 0 = idle
       // 1 3 4 5 = busy
       // 2 = done
-      if (masterdata.error) {
+      if (masterdata.error[0]) {
         cmd_state = CMD_STATE_FAILED;
         pages_waiting = 1;
-      } else if (masterdata.state == (I2CSTATE_DEVQUERY12 & I2C_MASK)) {
+      } else if (masterdata.state == I2CSTATE_DEVQUERY12) {
         // if (masterdata.dev_n >0) {
           cmd_state =  CMD_STATE_DATA_WAITING;
           pages_waiting = masterdata.dev_n;
