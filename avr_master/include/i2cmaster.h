@@ -19,14 +19,15 @@ typedef struct {
 typedef struct {
   uint8_t state;  // bit 0..2 i2c state
   uint8_t cur_cmd;
-  uint8_t dev_n;
+  uint8_t dev_n;  // doubles as byte_count for sending data
   uint8_t type;
   uint8_t temp_addr;
   uint8_t temp_type;
   uint8_t temp_bufsize;
   uint16_t counter;
-  uint8_t error[3];
+  uint8_t error[3];  // [error, i2c status during error, state during error]
   dev_t devices[I2C_MAX_DEVCOUNT];
+  uint8_t buffer[I2C_MASTER_BUFSIZE];
 } i2cmasterdata_t;
 
 void doi2cstuff(i2cmasterdata_t* data);

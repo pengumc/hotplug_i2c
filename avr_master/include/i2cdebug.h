@@ -13,11 +13,13 @@
 #include "default.h"
 
 #define USB_I2C_QUERY_DEVS 1
+#define USB_I2C_SEND_DATA 2
 
 #define CMD_STATE_IDLE 0
 #define CMD_STATE_BUSY 2
 #define CMD_STATE_FAILED 3
 #define CMD_STATE_DATA_WAITING 4
+#define CMD_STATE_WAITING_FOR_USER 5
 
 #define REPORT_MODE_NORMAL 0
 #define REPORT_MODE_ERROR 1

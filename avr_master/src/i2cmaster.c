@@ -19,8 +19,9 @@ void init_i2cmaster(i2cmasterdata_t* data) {
 // call this regularly
 void doi2cstuff(i2cmasterdata_t* data) {
   if (data->state == I2CSTATE_ERROR) return;
-  uint8_t status = TWSR & 0xF8;
+  uint8_t status;
   if (CHK(TWCR, TWINT)) {
+    status = TWSR & 0xF8;
     switch(status) {
       case AVRI2C_M_REP_START_SENT:
       case AVRI2C_M_START_SENT: {
@@ -29,7 +30,12 @@ void doi2cstuff(i2cmasterdata_t* data) {
             TWDR = 0x00;
             data->state = I2CSTATE_DEVQUERY1;
             goto i2c_en_ea;
-          } 
+          }
+          case I2CSTATE_SD0: {
+            TWDR = data->temp_addr<<1;
+            data->state = I2CSTATE_SD1;
+            goto i2c_en_ea;
+          }
           default: goto unhandled_state;
         }
       }
@@ -38,6 +44,12 @@ void doi2cstuff(i2cmasterdata_t* data) {
           case I2CSTATE_DEVQUERY1: {
             TWDR = TWAR >> 1;
             data->state = I2CSTATE_DEVQUERY2;
+            goto i2c_en_ea;
+          }
+          case I2CSTATE_SD1: {
+            //header, 5 bits payload size, 3 bits mode
+            TWDR = data->dev_n << 3;  // forcing mode 0 for now
+            data->state = I2CSTATE_SD2;
             goto i2c_en_ea;
           }
           default: goto unhandled_state;
@@ -60,6 +72,13 @@ void doi2cstuff(i2cmasterdata_t* data) {
             data->state = I2CSTATE_DEVQUERY5;
             goto i2c_en_ea;
           }
+          case I2CSTATE_SD2: {
+            TWDR = data->buffer[--data->dev_n];
+            if (data->dev_n == 0) {
+              data->state = I2CSTATE_SD3;
+            }
+            goto i2c_en_ea;
+          }
           default: goto unhandled_state;
         }
       }
@@ -69,6 +88,10 @@ void doi2cstuff(i2cmasterdata_t* data) {
             data->dev_n = 0;
             data->counter = 0;
             data->state = I2CSTATE_DEVQUERY6;
+            goto i2c_stop;
+          }
+          case I2CSTATE_SD3: {
+            data->state = I2CSTATE_DEVQUERY12;
             goto i2c_stop;
           }
           default: goto unhandled_state;
@@ -124,7 +147,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
         }
       }
       default: goto unhandled_state;
-      
+
     }
   } else {  // NO TWINT
     switch (data->state) {
@@ -151,19 +174,19 @@ void doi2cstuff(i2cmasterdata_t* data) {
       default: return;
     }
   }
-  // labels 
+  // labels
   i2c_en:
   TWCR = (1<<TWEN) | (1<<TWINT);
   return;
-  
+
   i2c_en_ea:
   TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT);
   return;
-  
+
   i2c_stop:
   TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWSTO) | (1<<TWINT);
   return;
-  
+
   unhandled_state:
   data->error[0] = I2C_ERR_UNHANDLED_STATE;
   data->error[1] = status;

@@ -388,8 +388,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="583.99927"
-     inkscape:cy="731.58485"
+     inkscape:cx="581.72987"
+     inkscape:cy="706.88691"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1102,7 +1102,11 @@
          sodipodi:role="line"
          x="420.5"
          y="207.36218"
-         id="tspan4955">1 = query devs</tspan></text>
+         id="tspan4955">1 = query devs</tspan><tspan
+         sodipodi:role="line"
+         x="420.5"
+         y="222.36218"
+         id="tspan4704">2 = send data</tspan></text>
     <g
        id="g4086-4-6-8"
        transform="translate(759.86328,240)">
@@ -1566,7 +1570,7 @@
          sodipodi:role="line"
          x="1179.5488"
          y="196.47937"
-         id="tspan7340" /></text>
+         id="tspan7340">5 = waiting for user data</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 880,122.36218 0,180"
@@ -2325,6 +2329,29 @@
            id="tspan2991-5-9-1-7-0-4-1-1"
            sodipodi:role="line"
            style="font-size:16px">page no req</tspan></text>
+    </g>
+    <g
+       id="g4091-8-9-8-3-3-9-79-3"
+       transform="translate(-20.136719,130)">
+      <rect
+         y="192.36218"
+         x="140.13672"
+         height="20"
+         width="120"
+         id="rect2987-8-8-8-0-7-4-1-0-9"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.63245553;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2989-6-2-4-8-1-8-8-0-0"
+         y="206.93689"
+         x="199.98291"
+         style="font-style:normal;font-weight:normal;font-size:16px;line-height:125%;font-family:Sans;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+         xml:space="preserve"><tspan
+           y="206.93689"
+           x="199.98291"
+           id="tspan2991-5-9-1-7-0-4-1-1-5"
+           sodipodi:role="line"
+           style="font-size:16px">target addr</tspan></text>
     </g>
   </g>
 </svg>

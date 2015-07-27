@@ -213,6 +213,23 @@ void set_report_mode(hid_device* handle, uint8_t mode) {
   usbwrite(handle, buf, sizeof(buf));
 }
 
+// -------------------------------------------------------------send_data_to_dev
+void send_data_to_dev(hid_device* handle, uint8_t addr) {
+  uint8_t buf[9];
+  memset(buf, 0, 9);
+  buf[1] = 2 << 4;
+  buf[7] = 1;
+  buf[8] = addr;
+  usbwrite(handle, buf, sizeof(buf));
+}
+
+// -----------------------------------------------------------------send_payload
+void send_payload(hid_device* handle, uint8_t data) {
+  uint8_t buf[9];
+  memset(buf, 0, 9);
+  buf[1] = data;
+  usbwrite(handle, buf, sizeof(buf));
+}
 
 // ---------------------------------------------------------------wait_for_twint
 void wait_for_twint(hid_device* handle, uint8_t* buf) {
@@ -346,11 +363,13 @@ void mastermode(int* argc, char** argv) {
         printf("5: set TWDR and send\n");
         printf("6: set TWINT, TWEN, TWEA\n");
         printf("7: send STOP\n");
-        printf("8: set TWCR pure (0x84 = int+ea\n");
+        printf("8: set TWCR pure (0x84 = int+ea)\n");
         printf("9: list i2c devs\n");
         printf("10: set TWBR\n");
         printf("11: query devs\n");
         printf("12: set report mode\n");
+        printf("13: send 1 byte to address\n");
+        printf("14: send byte 0\n");
         gets(input);
         args_found = sscanf(input, "%i 0x%02hX", &i, &data);
         if (args_found > 0) {
@@ -413,7 +432,23 @@ void mastermode(int* argc, char** argv) {
               _delay1s();
               read = 1;
             } else {
-              printf("expected mode as well");
+              printf("expected mode as well\n");
+            }
+          } else if (i == 13) {
+            if (args_found == 2) {
+              send_data_to_dev(handle, (uint8_t)data);
+              _delay1s();
+              read = 1;
+            } else {
+              printf("expected address as well\n");
+            }
+          } else if (i == 14) {
+            if (args_found == 2) {
+              send_payload(handle, (uint8_t)data);
+              _delay1s();
+              read = 1;
+            }else {
+              printf("expected data as well\n");
             }
           }else {
             break;
