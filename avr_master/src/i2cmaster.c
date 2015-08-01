@@ -48,7 +48,7 @@ void doi2cstuff(i2cmasterdata_t* data) {
           }
           case I2CSTATE_SD1: {
             //header, 5 bits payload size, 3 bits mode
-            TWDR = data->dev_n << 3;  // forcing mode 0 for now
+            TWDR = (data->dev_n << 3) | (data->temp_bufsize & 0x07);  
             data->state = I2CSTATE_SD2;
             goto i2c_en_ea;
           }

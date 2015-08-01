@@ -86,6 +86,7 @@ uchar usbFunctionWrite(uchar * data, uchar len) {
               masterdata.dev_n = recv[6];  // abusing dev_n for byte_count
               masterdata.temp_type = recv[6];  // so much abuse...
               masterdata.temp_addr = recv[7];
+              masterdata.temp_bufsize = recv[1];
               masterdata.state = I2CSTATE_IDLE;
               masterdata.error[0] = 0;
               cmd_state = CMD_STATE_WAITING_FOR_USER;
