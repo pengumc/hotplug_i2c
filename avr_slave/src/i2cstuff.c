@@ -42,16 +42,12 @@ void doi2cstuff(i2cdata_t* data) {
         return;
       }
       case AVRI2C_M_DATA_RECEIVED_AND_NACKED: // sla+R is never sent
-      case AVRI2C_M_DATA_RECEIVED_AND_ACKED: 
+      case AVRI2C_M_DATA_RECEIVED_AND_ACKED:
       case AVRI2C_M_SLA_R_SENT_AND_NACKED:
       case AVRI2C_M_SLA_R_SENT_AND_ACKED:
       case AVRI2C_S_ARB_LOST_AND_ACKED_GC: // not sending addressed transfers
 
-      case AVRI2C_S_RECEIVED_SLA_R_AND_ACKED:
-      case AVRI2C_S_ARB_LOST_AND_ACKED_OWN_SLA_R: // not possible yet
-      case AVRI2C_S_DATA_SENT_AND_ACKED:
-      case AVRI2C_S_DATA_SENT_AND_NACKED:
-      case AVRI2C_S_LAST_DATA_SENT_AND_ACKED:
+
       {
         goto i2c_horror_exit;
       }
@@ -121,30 +117,31 @@ void doi2cstuff(i2cdata_t* data) {
         }
       }
       case AVRI2C_M_ARBITRATION_LOST: {
-        // during BC3 = during sending of address, so other sender's address 
-        // is different, but it's still on TWDR so activate it.
-        // during BC4, we send the same address and this dev
-        // lost so the address is now taken by the winning dev
-        // same for BC5 and BC 6
-        switch (data->state) {
-          case I2CSTATE_BC3: {
+        // during BC2 = lost at sending gc address 0x00. so someone else
+        // wants to talk to a specific address. we should listen, it might be
+        // us. sadly we don't have that option so just go to BC0
+
+        // during BC3 = during sending of address, so other sender's address
+        // is different, but it's still on TWDR so activate it. We don't have
+        // the option to enter an addressed state so nothing to do but wait in
+        // BC0
+
+        // during BC4 or later = we sent the same address but we lost on type
+        // bufsize or wait. Our address is thus taken by the winning dev.
+        if (data->state >= I2CSTATE_BC3) {
+          if (data->state == I2CSTATE_BC3) {
             data->recv_addr = TWDR;
-          }
-          case I2CSTATE_BC5:
-          case I2CSTATE_BC6:
-          case I2CSTATE_BC4: {
+          } else {
             data->recv_addr = data->address;
-            activate_received_address(data);
-            while (update_address(data)) {data->wait += 1;}
-            set_I2C_address(data, data->address);
           }
-          default: {
-            data->state = I2CSTATE_BC0;
-            goto i2c_en_ea;
-          }
+          activate_received_address(data);
+          while (update_address(data)) {data->wait += 1;}
+          set_I2C_address(data, data->address);
         }
+        data->state = I2CSTATE_BC0;
+        goto i2c_en_ea;
       }
-      
+
       // Slave receiver
       case AVRI2C_S_GC_RECEIVED_AND_ACKED: {
         switch (data->state) {
@@ -187,11 +184,13 @@ void doi2cstuff(i2cdata_t* data) {
             set_I2C_address(data, data->address);
             // if (devtype was master and it sent bc req) or bc was still queued
             if ((data->recv_last == I2C_QUERY &&
-                data->recv_type < I2C_MASTER_TYPE_THRESHOLD) || 
-                data->bc_queued > 0) {
-                data->bc_queued = 1;
-                data->state = I2CSTATE_BC0;
-            } else data->state = I2CSTATE_IDLE;
+                data->recv_type < I2C_MASTER_TYPE_THRESHOLD) ||
+              data->bc_queued > 0) {
+              data->bc_queued = 1;
+            }
+            data->state = I2CSTATE_IDLE;
+                // data->state = I2CSTATE_BC0;
+            // } else data->state = I2CSTATE_IDLE;
             goto i2c_en_ea;
           }
           default: goto i2c_horror_exit;
@@ -202,13 +201,13 @@ void doi2cstuff(i2cdata_t* data) {
         data->state = I2CSTATE_IDLE;
         goto i2c_en_ea;
       }
-    
+
       // slave addressed
       case AVRI2C_S_RECEIVED_SLA_W_AND_ACKED:
       case AVRI2C_S_ARB_LOST_AND_ACKED_OWN_SLA_W: {  // prepare
         switch (data->state) {
+          case I2CSTATE_BC2:
           case I2CSTATE_IDLE: {
-            data->bufpos = 0;
             data->state = I2CSTATE_RECV0;
             goto i2c_en_ea;
           }
@@ -244,6 +243,45 @@ void doi2cstuff(i2cdata_t* data) {
           default: goto i2c_horror_exit;
         }
       }
+      // slave read
+      case AVRI2C_S_ARB_LOST_AND_ACKED_OWN_SLA_R:
+      case AVRI2C_S_RECEIVED_SLA_R_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_BC2:
+          case I2CSTATE_IDLE: {
+            data->state = I2CSTATE_SS0;
+            data->bufpos = i2c_send();
+            goto i2c_en_ea;
+          }
+          default: goto i2c_horror_exit;
+        }
+      }
+      case AVRI2C_S_DATA_SENT_AND_ACKED: {
+        switch(data->state) {
+          case I2CSTATE_SS0: {
+            data->buffer[--data->bufpos] = TWDR;
+            if (data->bufpos) {
+              data->state = I2CSTATE_SS1;
+              goto i2c_en;
+            } 
+            goto i2c_en_ea;
+          }
+          default: goto i2c_horror_exit;
+        }
+      }
+      case AVRI2C_S_DATA_SENT_AND_NACKED: {
+        switch(data->state) {
+          case I2CSTATE_SS1: {
+            data->state = I2CSTATE_IDLE;
+            goto i2c_en_ea;
+          }
+          default: goto i2c_horror_exit;
+        }
+      }
+      case AVRI2C_S_LAST_DATA_SENT_AND_ACKED: {
+        // bad, but let master handle it.
+        goto i2c_en_ea;
+      }
       default: goto i2c_horror_exit;
     }  // TWSR cases
   } else { // TWINT = 0
@@ -257,22 +295,25 @@ void doi2cstuff(i2cdata_t* data) {
         }
         return;
       }
+      case I2CSTATE_IDLE: {
+        if (data->bc_queued) data->state = I2CSTATE_BC0;
+      }
       default: {
         data->wait += 1;
         return;
       }
     }
   }
-  
-  goto i2c_bad_exit; 
+
+  goto i2c_bad_exit;
   i2c_bufpos:
   if (--data->bufpos) goto i2c_en_ea;
   else goto i2c_en;
-  
+
   i2c_en_ea:
   TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT);
   return;
-  
+
   i2c_en:
   TWCR = (1<<TWEN) | (1<<TWINT);
   i2c_bad_exit:
@@ -282,7 +323,7 @@ void doi2cstuff(i2cdata_t* data) {
   return;
   // to beat: 1748
 
-}  
+}
 
 // 0 if address is unchanged
 uint8_t update_address(i2cdata_t* data) {

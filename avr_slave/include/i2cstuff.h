@@ -53,6 +53,8 @@
 // personal data
 #define I2CSTATE_RECV0 0x06
 #define I2CSTATE_RECV1 0x07
+#define I2CSTATE_SS0 0x08
+#define I2CSTATE_SS1 0x09
 // broadcasting own stuff
 #define I2CSTATE_BC0 0x81
 #define I2CSTATE_BC1 0x82
@@ -82,7 +84,7 @@ typedef struct {
   uint8_t bufpos;
   uint8_t lastmode;
   uint8_t lastlen;
-  uint8_t once;
+  uint8_t once;  // = 0x80 if dev has sent it's own info at least once
 } i2cdata_t;
 
 typedef struct {
@@ -99,5 +101,6 @@ void activate_received_address(i2cdata_t* data);
 
 // all info is in i2cdata
 void i2c_receive();
+uint8_t i2c_send();
 
 #endif  // I2CSTUFF_H

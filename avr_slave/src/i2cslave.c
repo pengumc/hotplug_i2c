@@ -115,6 +115,12 @@ void i2c_receive(){
   }
 }
 
+// fill up i2cdata.buffer and return number of bytes that should be sent
+// (buffer[0] is sent last)
+uint8_t i2c_send() {
+ 
+}
+
 
 int main() {
   uint8_t reset = 0;
